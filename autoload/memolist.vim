@@ -116,8 +116,6 @@ function! memolist#new(title)
   let items = {
   \ 'title': a:title,
   \ 'date':  localtime(),
-  \ 'tags':  [],
-  \ 'categories':  [],
   \}
 
   if g:memolist_memo_date != 'epoch'
@@ -130,13 +128,9 @@ function! memolist#new(title)
     return
   endif
 
-  if get(g:, 'memolist_prompt_tags', 0) != 0
-    let items['tags'] = join(split(input("Memo tags: "), '\s'), ' ')
-  endif
-
-  if get(g:, 'memolist_prompt_categories', 0) != 0
-    let items['categories'] = join(split(input("Memo categories: "), '\s'), ' ')
-  endif
+  for prompt in get(g:, 'memolist_prompts', [])
+    let items[prompt] = join(split(input("Memo " . prompt . ": "), '\s'), ' ')
+  endfor
 
   if get(g:, 'memolist_filename_prefix_none', 0) != 0
     let file_name = s:esctitle(items['title'])
@@ -179,9 +173,9 @@ let s:default_template = [
 
 function! s:apply_template(template, items)
   let mx = '{{_\(\w\+\)_}}'
-  return map(copy(a:template), "
+  return map(deepcopy(a:template), "
   \  substitute(v:val, mx,
-  \   '\\=has_key(a:items, submatch(1)) ? a:items[submatch(1)] : submatch(0)', 'g')
+  \   '\\=has_key(a:items, submatch(1)) ? a:items[submatch(1)] : \"\"', 'g')
   \")
 endfunction
 
